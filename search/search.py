@@ -101,8 +101,8 @@ def recursiveDfs(node, problem):
         return Solution(node)
     else:
         for state in problem.getSuccessors(node.state):
-            (child,action,cost) = state
-            childNode = Node(node.action,node.state,problem,child)
+            (child, action, cost) = state
+            childNode = Node(node.action, node.state, problem, child)
             return recursiveDfs(childNode, problem)
 
 
