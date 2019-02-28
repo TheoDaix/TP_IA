@@ -20,13 +20,18 @@ Pacman agents (in searchAgents.py).
 import util
 
 class Node:
-    def __init__(self, action, parent, problem,state):
-        self.action = action
+    def __init__(self, parentAction, parent, problem,state):
+        self.parentAction = parentAction
         self.parent = parent
         self.problem = problem
         self.state = state
+        
+    def __eq__(self,other):
+        if not isinstance(other, Node):
+            return False
+        return self.parentAction == other.parentAction and self.parent == other.parent and self.problem== other.problem and self.problem==other.problem 
 
-class SearchProblem:
+class SearchProblem:    
     """
     This class outlines the structure of a search problem, but doesn't implement
     any of the methods (in object-oriented terminology: an abstract class).
@@ -93,30 +98,59 @@ def depthFirstSearch(problem):
     print "Is the start a goal?", problem.isGoalState(problem.getStartState())
     print "Start's successors:", problem.getSuccessors(problem.getStartState())
     """
+    
     start = Node(None,None,problem,problem.getStartState())
-    recursiveDfs(start, problem)
+    """frontier = util.Stack()
+    frontier.push(start)
+    return coreSearch(problem,frontier,[])[1:]"""
+    return recursiveDfs(start, problem,[problem.getStartState()])[1:]
+    
 
-def recursiveDfs(node, problem):
+            
+def recursiveDfs(node, problem,exploredSet):
     if (problem.isGoalState(node.state)):
-        return Solution(node)
+        return [node.parentAction]
     else:
-        for state in problem.getSuccessors(node.state):
-            (child, action, cost) = state
-            childNode = Node(node.action, node.state, problem, child)
-            return recursiveDfs(childNode, problem)
+        for child in problem.getSuccessors(node.state):
+            (childState, action, cost) = child
+            if not(childState in exploredSet):
+                exploredSet.append(childState)  
+                childNode = Node(action, node, problem, childState)
+                result = recursiveDfs(childNode, problem,exploredSet) 
+                if result != None:
+                    return [node.parentAction] + result
 
+                        
+def coreSearch(problem,frontier,exploredSet): #FIFO= bfs LIFO = Dfs
+    while not(frontier.isEmpty()):
+        node = frontier.pop()
+        if (problem.isGoalState(node.state)):
+            return solution(node)
+        else:
+            exploredSet.append(node.state)
+            for child in problem.getSuccessors(node.state): 
+                (childState, action, cost) = child
+                childNode = Node(action, node, problem, childState)
+                if  not(childState in exploredSet):
+                    inFrontier = False
+                    for front in frontier.list:
+                        if front.state == childState:
+                            inFrontier = True     #gérer childNode in frontier
+                    if not(inFrontier):
+                        frontier.push(childNode)
 
-def Solution(node):
+def solution(node):
     if node == None:
         return []
     else:
-        return Solution(node.parent) + [node.action]
-
+        return solution(node.parent)+ [node.parentAction]
 
 def breadthFirstSearch(problem):
     """Search the shallowest nodes in the search tree first."""
-    "*** YOUR CODE HERE ***"
-    util.raiseNotDefined()
+    start = Node(None,None,problem,problem.getStartState())
+    frontier = util.Queue()
+    frontier.push(start)
+    return coreSearch(problem,frontier,[])[1:]
 
 def uniformCostSearch(problem):
     """Search the node of least total cost first."""
