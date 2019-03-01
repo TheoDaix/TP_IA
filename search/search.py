@@ -100,12 +100,7 @@ def depthFirstSearch(problem):
     """
     
     start = Node(None,None,problem,problem.getStartState())
-    """frontier = util.Stack()
-    frontier.push(start)
-    return coreSearch(problem,frontier,[])[1:]"""
     return recursiveDfs(start, problem,[problem.getStartState()])[1:]
-    
-
             
 def recursiveDfs(node, problem,exploredSet):
     if (problem.isGoalState(node.state)):
@@ -120,12 +115,16 @@ def recursiveDfs(node, problem,exploredSet):
                 if result != None:
                     return [node.parentAction] + result
 
-                        
-def coreSearch(problem,frontier,exploredSet): #FIFO= bfs LIFO = Dfs
+def breadthFirstSearch(problem):
+    """Search the shallowest nodes in the search tree first."""
+    start = Node(None,None,problem,problem.getStartState())
+    frontier = util.Queue()
+    frontier.push(start)
+    exploredSet = []
     while not(frontier.isEmpty()):
         node = frontier.pop()
         if (problem.isGoalState(node.state)):
-            return solution(node)
+            return solution(node)[1:]
         else:
             exploredSet.append(node.state)
             for child in problem.getSuccessors(node.state): 
@@ -138,20 +137,13 @@ def coreSearch(problem,frontier,exploredSet): #FIFO= bfs LIFO = Dfs
                             inFrontier = True     #gérer childNode in frontier
                     if not(inFrontier):
                         frontier.push(childNode)
-
+                    
 def solution(node):
     if node == None:
         return []
     else:
         return solution(node.parent)+ [node.parentAction]
-
-def breadthFirstSearch(problem):
-    """Search the shallowest nodes in the search tree first."""
-    start = Node(None,None,problem,problem.getStartState())
-    frontier = util.Queue()
-    frontier.push(start)
-    return coreSearch(problem,frontier,[])[1:]
-
+        
 def uniformCostSearch(problem):
     """Search the node of least total cost first."""
     "*** YOUR CODE HERE ***"
