@@ -19,19 +19,6 @@ Pacman agents (in searchAgents.py).
 
 import util
 
-class Node:
-	def __init__(self, parentAction, parent, problem,state, cost = 0):
-		self.parentAction = parentAction
-		self.parent = parent
-		self.problem = problem
-		self.state = state
-		self.cost = cost
-		
-	def __eq__(self,other): 
-		if not isinstance(other, Node):
-			return False
-		return self.state==other.state 
-
 class SearchProblem:    
 	"""
 	This class outlines the structure of a search problem, but doesn't implement
@@ -86,6 +73,18 @@ def tinyMazeSearch(problem):
 	w = Directions.WEST
 	return  [s, s, w, s, w, w, s, w]
 
+class Node:
+	def __init__(self, state, parent,  parentAction, cost = 1):
+		self.state = state
+		self.parent = parent
+		self.parentAction = parentAction
+		self.cost = cost
+		
+	def __eq__(self,other): 
+		if not isinstance(other, Node):
+			return False
+		return self.state==other.state 
+
 def depthFirstSearch(problem):
 	"""
 	Search the deepest nodes in the search tree first.
@@ -101,7 +100,7 @@ def depthFirstSearch(problem):
 	print "Start's successors:", problem.getSuccessors(problem.getStartState())
 	"""
 	
-	start = Node(None,None,problem,problem.getStartState())
+	start = Node(problem.getStartState(), None,None,0)
 	return recursiveDfs(start, problem,[problem.getStartState()])[1:]
 			
 def recursiveDfs(node, problem,exploredSet):
@@ -112,52 +111,57 @@ def recursiveDfs(node, problem,exploredSet):
 			(childState, action, cost) = child
 			if not(childState in exploredSet):
 				exploredSet.append(childState)  
-				childNode = Node(action, node, problem, childState)
+				childNode = Node(childState, node, action )
 				result = recursiveDfs(childNode, problem,exploredSet) 
 				if result != None:
 					return [node.parentAction] + result
 
 def breadthFirstSearch(problem):
 	"""Search the shallowest nodes in the search tree first."""
-	start = Node(None,None,problem,problem.getStartState())
+	start = Node(problem.getStartState(), None,None,0)
 	frontier = util.Queue()
 	frontier.push(start)
 	exploredSet = []
 	while not(frontier.isEmpty()):
 		node = frontier.pop()
 		if (problem.isGoalState(node.state)):
-			return solution(node)[1:]
+			return solution(node)
 		else:
 			exploredSet.append(node.state)
 			for child in problem.getSuccessors(node.state): 
 				(childState, action, cost) = child
-				childNode = Node(action, node, problem, childState)
+				childNode = Node(childState, node, action )
 				if not(childState in exploredSet or childNode in frontier.list): 
 					frontier.push(childNode)
-					
+		
 def solution(node):
-	if node == None:
+	if node.parent == None:
 		return []
 	else:
 		return solution(node.parent)+ [node.parentAction]
-		
-def uniformCostSearch(problem):
-	"""Search the node of least total cost first."""
-	start = Node(None,None,problem,problem.getStartState())
+	
+def coreCostSearch(problem, heuristic):
+	def heuristicCost(node):
+		return node.cost + heuristic(node.state,problem)
+	start = Node(problem.getStartState(), None,None,0)
 	frontier = util.PriorityQueue()
-	frontier.push(start,start.cost)
+	frontier.push(start,heuristicCost(start))
 	exploredSet = []
 	while not(frontier.isEmpty()):
 		node = frontier.pop()
 		if (problem.isGoalState(node.state)):
-			return solution(node)[1:]
+			return solution(node)
 		else:
 			exploredSet.append(node.state)
 			for child in problem.getSuccessors(node.state): 
 				(childState, action, cost) = child
-				childNode = Node(action, node, problem, childState, node.cost + cost)
+				childNode = Node(childState, node, action, node.cost + cost)
 				if not(childState in exploredSet):
-					frontier.update(childNode,childNode.cost)
+					frontier.update(childNode,heuristicCost(childNode))	
+
+def uniformCostSearch(problem):
+	"""Search the node of least total cost first."""
+	return coreCostSearch(problem,nullHeuristic)
 				
 
 def nullHeuristic(state, problem=None):
@@ -169,24 +173,7 @@ def nullHeuristic(state, problem=None):
 
 def aStarSearch(problem, heuristic=nullHeuristic):
 	"""Search the node that has the lowest combined cost and heuristic first."""
-	def heuristicCost(node):
-		return node.cost + heuristic(node.state,problem)
-	start = Node(None,None,problem,problem.getStartState())
-	frontier = util.PriorityQueue()
-	frontier.push(start,heuristicCost(start))
-	exploredSet = []
-	while not(frontier.isEmpty()):
-		node = frontier.pop()
-		if (problem.isGoalState(node.state)):
-			return solution(node)[1:]
-		else:
-			exploredSet.append(node.state)
-			for child in problem.getSuccessors(node.state): 
-				(childState, action, cost) = child
-				childNode = Node(action, node, problem, childState, node.cost + cost)
-				if not(childState in exploredSet):
-					frontier.update(childNode,heuristicCost(childNode))
-
+	return coreCostSearch(problem, heuristic)	
 
 # Abbreviations
 bfs = breadthFirstSearch
