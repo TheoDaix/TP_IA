@@ -287,23 +287,34 @@ class CornersProblem(search.SearchProblem):
         self._expanded = 0 # DO NOT CHANGE; Number of search nodes expanded
         # Please add any code here which you would like to use
         # in initializing the problem
-        "*** YOUR CODE HERE ***"
+        
+        visitedCorners = []
+        for corner in self.corners:
+            if corner == self.startingPosition:
+                visitedCorners.append((corner,True))
+            else:
+                 visitedCorners.append((corner,False))
+        self.startState = (self.startingPosition, visitedCorners)
+        self.costFn = lambda x:1
 
     def getStartState(self):
         """
         Returns the start state (in your state space, not the full Pacman state
         space)
         """
-        "*** YOUR CODE HERE ***"
-        util.raiseNotDefined()
+        return self.startState
 
     def isGoalState(self, state):
         """
         Returns whether this search state is a goal state of the problem.
         """
-        "*** YOUR CODE HERE ***"
-        util.raiseNotDefined()
-
+        isGoal=True
+        (_, visitedCorners) = state
+        for visitedCorner in visitedCorners:
+            (_, visit) = visitedCorner
+            isGoal = (isGoal and visit)
+        return isGoal
+        
     def getSuccessors(self, state):
         """
         Returns successor states, the actions they require, and a cost of 1.
@@ -316,6 +327,7 @@ class CornersProblem(search.SearchProblem):
         """
 
         successors = []
+        (currentPosition, visitedCorners) = state
         for action in [Directions.NORTH, Directions.SOUTH, Directions.EAST, Directions.WEST]:
             # Add a successor state to the successor list if the action is legal
             # Here's a code snippet for figuring out whether a new position hits a wall:
@@ -323,8 +335,19 @@ class CornersProblem(search.SearchProblem):
             #   dx, dy = Actions.directionToVector(action)
             #   nextx, nexty = int(x + dx), int(y + dy)
             #   hitsWall = self.walls[nextx][nexty]
-
-            "*** YOUR CODE HERE ***"
+            x,y = currentPosition
+            dx, dy = Actions.directionToVector(action)
+            nextx, nexty = int(x + dx), int(y + dy)
+            if not self.walls[nextx][nexty]:
+                newVisitedCorners = []
+                for visitedCorner in visitedCorners:
+                    (corner,visit) = visitedCorner
+                    if (nextx, nexty) == corner:
+                        newVisitedCorners.append((corner,True))
+                    else:
+                        newVisitedCorners.append(visitedCorner)
+                nextState = ((nextx,nexty),newVisitedCorners)
+                successors.append((nextState,action,self.costFn(nextState)))
 
         self._expanded += 1 # DO NOT CHANGE
         return successors
