@@ -392,16 +392,24 @@ def cornersHeuristic(state, problem):
     if problem.isGoalState(state):
         return 0
     else:
-        xy1 = state[0]
-        d = manhattanDistance(corners[0], xy1)
-        xy2 = corners[0]
-        for i in range(1, len(corners)):
-            d1 = manhattanDistance(xy1, corners[i])
-            if (corners[i], False) in state[1] and d1 < d:
+        (pos,visitedCorners) = state
+        
+        d = -1
+        nearestCorner = None
+           
+        for corner in corners:
+            d1 = manhattanDistance(pos, corner)
+            if (corner, False) in visitedCorners and (d1 < d  or d == -1):
                 d = d1
-                xy2 = corners[i]
-                state[1].pop((xy2,False))
-        return d + cornersHeuristic((xy2, state[1].append((xy2, True))), problem)
+                nearestCorner = corner
+        newVisitedCorners = []
+        for cornerState in visitedCorners:
+            (corner, _) = cornerState
+            if corner == nearestCorner:
+                newVisitedCorners.append((corner,True))
+            else:
+                newVisitedCorners.append(cornerState)
+        return d + cornersHeuristic((nearestCorner, newVisitedCorners), problem)
 
 class AStarCornersAgent(SearchAgent):
     "A SearchAgent for FoodSearchProblem using A* and your foodHeuristic"
@@ -495,7 +503,16 @@ def foodHeuristic(state, problem):
     """
     position, foodGrid = state
     "*** YOUR CODE HERE ***"
-    return 0
+    if problem.isGoalState(state):
+        return 0
+    else:
+        d = -1
+        nearestFood = None
+        for food in foodGrid.asList() :
+            if manhattanDistance(food,position) < d or d == -1:
+                d = manhattanDistance(food,position)
+                nearestFood = food
+        return len(foodGrid.asList()) - 1 + d
 
 class ClosestDotSearchAgent(SearchAgent):
     "Search for all food using a sequence of searches"
