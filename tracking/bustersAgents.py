@@ -163,4 +163,22 @@ class GreedyBustersAgent(BustersAgent):
             [beliefs for i, beliefs in enumerate(self.ghostBeliefs)
              if livingGhosts[i+1]]
         "*** YOUR CODE HERE ***"
-        util.raiseNotDefined()
+        livingGhosts = gameState.getLivingGhosts()[1:]
+        if (all(not b for b in livingGhosts)):
+            return Directions.STOP
+        else:
+            alivesDistances= dict()
+            for i in range(len (livingGhosts)):
+                if livingGhosts[i]:
+                    mostLikelyPos= list(self.ghostBeliefs[i].keys())[0]
+                    for p in self.ghostBeliefs[i]:
+                        if self.ghostBeliefs[i][p] >self.ghostBeliefs[i][mostLikelyPos]:
+                            mostLikelyPos=p
+                    alivesDistances[mostLikelyPos] = self.distancer.getDistance(mostLikelyPos, pacmanPosition)
+                    
+            closest, closestDistance = min(alivesDistances.items(), key = lambda x : x[1])
+            bestMove= legal[0]
+            for move in legal:
+                if self.distancer.getDistance( closest , Actions.getSuccessor(pacmanPosition, move))<closestDistance:
+                    return move
+            
