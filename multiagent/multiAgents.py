@@ -181,9 +181,7 @@ class MinimaxAgent(MultiAgentSearchAgent):
                 return min ([maxValue(gameState.generateSuccessor(i,a),cnt+1) for a in gameState.getLegalActions(i)])
             else:
                 return min([minValue(gameState.generateSuccessor(i,a),i+1,cnt) for a in gameState.getLegalActions(i)])
-                          
-                
-                
+
         bestAction = "Stop"
         bestScore= -float("inf")
         for a in gameState.getLegalActions(0):
@@ -203,7 +201,62 @@ class AlphaBetaAgent(MultiAgentSearchAgent):
           Returns the minimax action using self.depth and self.evaluationFunction
         """
         "*** YOUR CODE HERE ***"
-        util.raiseNotDefined()
+
+        def terminalTest(gameState, cnt=0):
+            return gameState.isWin() or gameState.isLose() or self.depth == cnt
+
+        def maxValue(gameState,alpha,beta, cnt=0):
+            if terminalTest(gameState, cnt):
+                return self.evaluationFunction(gameState)
+            else:
+                v = -float("inf")
+                for a in gameState.getLegalActions(0):
+                    v = max(v,minValue(gameState.generateSuccessor(0, a),
+                                       alpha,beta, 1, cnt))
+                    if v >= beta:
+                        return v
+                    alpha = max(alpha,v)
+                return v
+
+        def minValue(gameState,alpha,beta, i=1, cnt=0):
+            if terminalTest(gameState, cnt):
+                return self.evaluationFunction(gameState)
+            elif i == gameState.getNumAgents() - 1:
+                v = float("inf")
+                for a in gameState.getLegalActions(0):
+                    v = min(v,
+                            maxValue(gameState.generateSuccessor(0, a),alpha,
+                                     beta, cnt+1))
+                    if v <= alpha:
+                        return v
+                    beta = min(beta, v)
+                return v
+            else:
+                v = float("inf")
+                for a in gameState.getLegalActions(0):
+                    v = min(v,minValue(gameState.generateSuccessor(0, a),
+                                       alpha,beta, i+1, cnt))
+                    if v <= alpha:
+                        return v
+                    beta = min(beta,v)
+                return v
+
+        bestAction = "Stop"
+        bestScore = -float("inf")
+        alpha = -float("inf")
+        beta = float("inf")
+        v= -float("inf")
+        for a in gameState.getLegalActions(0):
+            v = max(v,minValue(gameState.generateSuccessor(0, a),alpha,
+                           beta))
+            if v >= beta :
+                return a
+
+            alpha = max(alpha,v)
+            """if v >= bestScore:
+                bestAction = a
+                bestScore = v"""
+        return bestAction
 
 class ExpectimaxAgent(MultiAgentSearchAgent):
     """
