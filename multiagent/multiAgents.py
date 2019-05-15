@@ -94,10 +94,7 @@ class ReflexAgent(Agent):
             return float("inf")
         distMin = min(distFoods)
         
-        if distMin ==0:
-            return float("inf")
-        else:
-            score+= 1/(distMin+1)    
+        score+= 1/(distMin)    
         
         if not(safe):            
             ghostDist= None
@@ -269,18 +266,66 @@ class ExpectimaxAgent(MultiAgentSearchAgent):
           legal moves.
         """
         "*** YOUR CODE HERE ***"
-        util.raiseNotDefined()
+        def avg(l):
+            cnt =0
+            for i in l:
+                cnt+=i
+            return float(cnt)/float(len(l))
+        def terminalTest(gameState,cnt=0):
+            return gameState.isWin() or gameState.isLose() or self.depth == cnt
+            
+        def maxValue(gameState,cnt=0):
+            if terminalTest(gameState,cnt):
+                return self.evaluationFunction(gameState)
+            else:
+                return max([minValue(gameState.generateSuccessor(0,a),1,cnt) for a in gameState.getLegalActions(0)])
+        
+        def minValue(gameState,i=1,cnt=0):
+            if terminalTest(gameState,cnt):
+                return self.evaluationFunction(gameState)
+            elif i == gameState.getNumAgents()-1:
+                return  avg([maxValue(gameState.generateSuccessor(i,a),cnt+1) for a in gameState.getLegalActions(i)])
+            else:
+                return avg([minValue(gameState.generateSuccessor(i,a),i+1,cnt) for a in gameState.getLegalActions(i)])
+
+        bestAction = None
+        bestScore= -float("inf")
+        for a in gameState.getLegalActions(0):
+            tmp = minValue(gameState.generateSuccessor(0,a))
+            if tmp>=bestScore:
+                bestAction = a
+                bestScore = tmp
+        return bestAction
 
 def betterEvaluationFunction(currentGameState):
     """
       Your extreme ghost-hunting, pellet-nabbing, food-gobbling, unstoppable
       evaluation function (question 5).
 
-      DESCRIPTION: <write something here so we know what you did>
+      DESCRIPTION: Gums, gumsEaten, nbrFood, distFantome, score,distFood
     """
     "*** YOUR CODE HERE ***"
-    util.raiseNotDefined()
-
+    gs = currentGameState
+    ghostStates = gs.getGhostStates()
+    scaredTimes = [ghostState.scaredTimer for ghostState in ghostStates]
+    pacmanPos = gs.getPacmanPosition()
+    score = gs.getScore()/100
+    
+    if gs.isWin():
+        return float("inf")
+    
+    if all(time !=0 for time in scaredTimes):
+        pass#todo
+    
+    elif any(manhattanDistance(pacmanPos,ghostPos) <=1 for ghostPos in gs.getGhostPositions()):
+        return -float("inf")
+        
+    foodDist =[manhattanDistance(pacmanPos,food) for food in gs.getFood().asList()]
+    
+    score+= max([1./dist for dist in foodDist])
+    score-= (gs.getNumFood())
+    return score
+    
 # Abbreviation
 better = betterEvaluationFunction
 
