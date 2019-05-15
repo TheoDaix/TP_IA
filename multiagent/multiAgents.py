@@ -292,7 +292,7 @@ class ExpectimaxAgent(MultiAgentSearchAgent):
         bestScore= -float("inf")
         for a in gameState.getLegalActions(0):
             tmp = minValue(gameState.generateSuccessor(0,a))
-            if tmp>=bestScore:
+            if tmp>=bestScore :
                 bestAction = a
                 bestScore = tmp
         return bestAction
@@ -314,16 +314,11 @@ def betterEvaluationFunction(currentGameState):
     if gs.isWin():
         return float("inf")
     
-    if all(time !=0 for time in scaredTimes):
-        pass#todo
-    
-    elif any(manhattanDistance(pacmanPos,ghostPos) <=1 for ghostPos in gs.getGhostPositions()):
+    if any(time ==0 for time in scaredTimes)and any(manhattanDistance(pacmanPos,ghostPos) <=1 for ghostPos in gs.getGhostPositions()):
         return -float("inf")
-        
-    foodDist =[manhattanDistance(pacmanPos,food) for food in gs.getFood().asList()]
     
-    score+= max([1./dist for dist in foodDist])
-    score-= (gs.getNumFood())
+    score+= max([1./manhattanDistance(pacmanPos,food) for food in gs.getFood().asList()])
+    score-= gs.getNumFood()
     return score
     
 # Abbreviation
