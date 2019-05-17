@@ -204,44 +204,38 @@ class AlphaBetaAgent(MultiAgentSearchAgent):
         def maxValue(gameState,alpha,beta, cnt=0):
             if terminalTest(gameState, cnt):
                 return self.evaluationFunction(gameState)
-            else:
-                v = -float("inf")
-                for a in gameState.getLegalActions(0):
-                    v = max(v,minValue(gameState.generateSuccessor(0, a),
-                                        alpha,beta, 1, cnt))
-                    if v >= beta:
-                        return v
-                    alpha = max(alpha,v)
-                return v
+                
+            v = -float("inf")
+            for a in gameState.getLegalActions(0):
+                v = max(v,minValue(gameState.generateSuccessor(0, a),
+                                    alpha,beta, 1, cnt))
+                if v > beta:
+                    return v
+                alpha = max(alpha,v)
+            return v
 
         def minValue(gameState,alpha,beta, i=1, cnt=0):
             if terminalTest(gameState, cnt):
                 return self.evaluationFunction(gameState)
-            elif i == gameState.getNumAgents() - 1:
-                v = float("inf")
-                for a in gameState.getLegalActions(0):
-                    v = min(v,maxValue(gameState.generateSuccessor(0, a),
-                                        alpha,beta, cnt+1))
-                    if v <= alpha:
-                        return v
-                    beta = min(beta, v)
-                return v
-            else:
-                v = float("inf")
-                for a in gameState.getLegalActions(0):
-                    v = min(v,minValue(gameState.generateSuccessor(0, a),
-                                        alpha,beta, i+1, cnt))
-                    if v <= alpha:
-                        return v
-                    beta = min(beta,v)
-                return v
 
-        bestAction = "Stop"
+            v = float("inf")
+            for a in gameState.getLegalActions(i):
+                if i == gameState.getNumAgents() - 1:
+                    v = min(v,maxValue(gameState.generateSuccessor(i, a),
+                                    alpha,beta, cnt+1))
+                else:
+                    v = min(v,minValue(gameState.generateSuccessor(i, a),
+                                        alpha,beta, i+1, cnt))
+                if v < alpha:
+                    return v
+                beta = min(beta, v)
+            return v
+                
+        bestAction = None
         alpha = -float("inf")
         beta = float("inf")
         v= -float("inf")
         for a in gameState.getLegalActions(0):
-            
             newVal = minValue(gameState.generateSuccessor(0, a),alpha,
                            beta)
             if v <= newVal:
@@ -302,19 +296,22 @@ def betterEvaluationFunction(currentGameState):
       Your extreme ghost-hunting, pellet-nabbing, food-gobbling, unstoppable
       evaluation function (question 5).
 
-      DESCRIPTION: Gums, gumsEaten, nbrFood, distFantome, score,distFood
+      DESCRIPTION: Si on se trouve dans un etat gagnant, alors on met un score infini. Si les fantomes sont effrayes, on incremente le score.
+                    Si les fantomes ne sont pas effrayes et qu'on est proche d'eux, alors l'etat a un score -inf. On enleve au score un poids
+                    en fonction du nombre de boules restantes et on lui ajoute un poids en fonction de la proximite des nourritures.
     """
     "*** YOUR CODE HERE ***"
     gs = currentGameState
     ghostStates = gs.getGhostStates()
     scaredTimes = [ghostState.scaredTimer for ghostState in ghostStates]
     pacmanPos = gs.getPacmanPosition()
-    score = gs.getScore()/100
-    
+    score = gs.getScore()
+
     if gs.isWin():
         return float("inf")
-    
-    if any(time ==0 for time in scaredTimes)and any(manhattanDistance(pacmanPos,ghostPos) <=1 for ghostPos in gs.getGhostPositions()):
+    if all(time !=0 for time in scaredTimes):
+        score+= 10
+    elif any(manhattanDistance(pacmanPos,ghostPos) <=1 for ghostPos in gs.getGhostPositions()):
         return -float("inf")
     
     score+= max([1./manhattanDistance(pacmanPos,food) for food in gs.getFood().asList()])
