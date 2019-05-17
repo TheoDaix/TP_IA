@@ -308,7 +308,7 @@ def betterEvaluationFunction(currentGameState):
     score = gs.getScore()
 
     if gs.isWin():
-        return float("inf")
+        return score
     if all(time !=0 for time in scaredTimes):
         score+= 10
     elif any(manhattanDistance(pacmanPos,ghostPos) <=1 for ghostPos in gs.getGhostPositions()):
